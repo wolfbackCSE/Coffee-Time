@@ -318,6 +318,55 @@
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important;}
   }
+
+  /* ---------- DISCOVERY REFRESH ---------- */
+  :root{
+    --ink:#15231f;
+    --ink-soft:#203b34;
+    --parchment:#f5f8f4;
+    --parchment-dim:#e6efe8;
+    --maroon:#d56b3d;
+    --maroon-deep:#a94d2b;
+    --mustard:#efb84b;
+    --teal:#2c8d78;
+    --teal-deep:#1d6959;
+    --brown:#29443b;
+    --line:#d4e1d7;
+  }
+  html,body{background:var(--parchment);color:var(--brown);}
+  .hero{background:linear-gradient(135deg,#12251f 0%,#1e5144 62%,#2f806a 100%);padding:52px 24px 48px;}
+  .hero-inner{max-width:1180px;}
+  h1{font-size:clamp(56px,9vw,108px);letter-spacing:-.04em;}
+  .hero-sub{font-size:17px;max-width:630px;}
+  .clock-card{background:rgba(8,25,20,.35);border-color:rgba(255,255,255,.18);backdrop-filter:blur(8px);}
+  .controls{background:rgba(245,248,244,.94);backdrop-filter:blur(16px);padding:14px 24px;box-shadow:0 8px 24px rgba(21,35,31,.06);}
+  .controls-inner{max-width:1180px;}
+  .search-wrap input{border-radius:14px;padding:13px 16px 13px 42px;border-color:#c7d9cb;box-shadow:0 4px 14px rgba(21,35,31,.05);}
+  .chip{border-radius:999px;border-color:#c7d9cb;padding:9px 14px;}
+  .chip.active{background:var(--ink);border-color:var(--ink);}
+  select.sort-select{border-radius:12px;border-color:#c7d9cb;padding:10px 13px;}
+  .content{max-width:1180px;padding-top:34px;}
+  .result-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;}
+  .live-source{font-size:11px;color:var(--teal-deep);font-weight:700;letter-spacing:.05em;text-transform:uppercase;}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:22px;}
+  .card{border:0;border-radius:20px;padding:22px;box-shadow:0 8px 28px rgba(38,69,57,.08);}
+  .card:hover{transform:translateY(-4px);box-shadow:0 16px 34px rgba(38,69,57,.14);}
+  .card-name{font-size:22px;}
+  .status-badge{padding:6px 10px;}
+  .area-tag{background:#eef5ed;color:var(--teal-deep);}
+  .pick-tag{background:#fff8e9;border-color:#f0dfb7;}
+  .card-actions{border-top-color:#dce8de;}
+  .card-actions a{color:var(--maroon-deep);font-weight:600;}
+  .error-banner{display:none;max-width:1180px;margin:16px auto 0;padding:12px 16px;border-radius:12px;background:#fff4e7;color:#8c4c24;font-size:13px;}
+  .error-banner.show{display:block;}
+  .loading-state{display:none;padding:54px;text-align:center;color:var(--teal-deep);font-family:'JetBrains Mono',monospace;}
+  .loading-state.show{display:block;}
+  @media(max-width:760px){
+    .hero{padding:38px 18px 32px;}
+    .controls{padding:12px 14px;}
+    .content{padding-top:24px;}
+    .result-bar{align-items:flex-start;flex-direction:column;}
+  }
 </style>
 </head>
 <body>
@@ -326,7 +375,7 @@
   <div class="hero-inner">
     <div class="eyebrow"><span class="dot"></span> LIVE — DHAKA, BANGLADESH</div>
     <h1>Coffee<br><em>Time</em></h1>
-    <p class="hero-sub"><b>37 cafés across Dhaka</b> — Gulshan, Banani, Dhanmondi, Uttara, Bashundhara &amp; Mirpur — with weekly hours, popular picks and contact details pulled from Google Maps. Open/closed status is calculated live against the clock below.</p>
+    <p class="hero-sub"><b>Find your next cup in Dhaka.</b> Search live café listings by area, opening time, distance, rating, reviews, and menu highlights — then head there with one tap.</p>
     <div class="clock-row">
       <div class="clock-card">
         <div class="label">Dhaka time now</div>
@@ -336,7 +385,7 @@
       <div class="clock-card">
         <div class="label">Open right now</div>
         <div class="value mono open-count" id="openCount">—</div>
-        <div class="sub">out of 37 cafés</div>
+        <div class="sub" id="openCountSub">from the available café list</div>
       </div>
     </div>
   </div>
@@ -378,10 +427,15 @@
 </div>
 
 <div class="content">
-  <div class="result-count" id="resultCount"></div>
+  <div class="result-bar">
+    <div class="result-count" id="resultCount"></div>
+    <div class="live-source" id="liveSource">Curated Dhaka cafés</div>
+  </div>
+  <div class="loading-state" id="loadingState">Finding cafés near you…</div>
   <div class="grid" id="grid"></div>
   <div class="empty-state" id="emptyState" style="display:none;">No cafés match that search. Try another name or area.</div>
 </div>
+<div class="error-banner" id="errorBanner" role="status"></div>
 
 <footer>
   <div class="credit">
@@ -468,7 +522,60 @@ function haversine(lat1, lon1, lat2, lon2){
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>"']/g, character => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+  }[character]));
+}
+
 let userLoc = null;
+let activeCafes = CAFES;
+let requestId = 0;
+
+function showError(message){
+  const banner = document.getElementById('errorBanner');
+  banner.textContent = message;
+  banner.classList.toggle('show', Boolean(message));
+}
+
+async function loadPlaces(query){
+  const currentRequest = ++requestId;
+  const loading = document.getElementById('loadingState');
+  loading.classList.add('show');
+  showError('');
+  const params = new URLSearchParams();
+  if(query) params.set('query', query);
+  if(userLoc){
+    params.set('lat', userLoc.lat);
+    params.set('lng', userLoc.lng);
+  }
+  try{
+    const response = await fetch('/api/places?' + params.toString(), {headers:{Accept:'application/json'}});
+    const contentType = response.headers.get('content-type') || '';
+    const payload = contentType.includes('application/json') ? await response.json() : {};
+    if(!response.ok) throw new Error(payload.error || 'Live search is unavailable on this deployment.');
+    if(currentRequest !== requestId) return;
+    if(Array.isArray(payload.places) && payload.places.length){
+      activeCafes = payload.places;
+      document.getElementById('liveSource').textContent = 'Live Google Places results';
+    }else{
+      activeCafes = CAFES;
+      document.getElementById('liveSource').textContent = 'Curated Dhaka cafés';
+      showError('No live cafés matched that search. Showing the curated Dhaka list instead.');
+    }
+    refreshAreaChips();
+    render();
+  }catch(error){
+    if(currentRequest !== requestId) return;
+    activeCafes = CAFES;
+    document.getElementById('liveSource').textContent = 'Curated Dhaka cafés';
+    showError(error.message + ' Showing the curated list while you browse.');
+    refreshAreaChips();
+    render();
+  }finally{
+    if(currentRequest === requestId) loading.classList.remove('show');
+  }
+}
 
 document.getElementById('nearBtn').onclick = function(){
   if(userLoc){
@@ -476,6 +583,10 @@ document.getElementById('nearBtn').onclick = function(){
     this.classList.remove('active');
     document.getElementById('distanceOpt').disabled = true;
     if(state.sort === 'distance') { state.sort = 'rating'; document.getElementById('sortSelect').value = 'rating'; }
+    activeCafes = CAFES;
+    document.getElementById('liveSource').textContent = 'Curated Dhaka cafés';
+    refreshAreaChips();
+    loadPlaces(state.q);
     render();
     return;
   }
@@ -495,6 +606,7 @@ document.getElementById('nearBtn').onclick = function(){
       document.getElementById('distanceOpt').textContent = 'Sort: nearest to me';
       document.getElementById('sortSelect').value = 'distance';
       state.sort = 'distance';
+      loadPlaces(state.q);
       render();
     },
     err => {
@@ -507,7 +619,10 @@ document.getElementById('nearBtn').onclick = function(){
 let state = { q:'', area:'All', openOnly:false, sort:'rating' };
 
 const chipRow = document.getElementById('areaChips');
-['All', ...AREAS].forEach(a => {
+function refreshAreaChips(){
+  const areas = [...new Set(activeCafes.map(c => c.a).filter(Boolean))].sort();
+  chipRow.innerHTML = '';
+  ['All', ...areas].forEach(a => {
   const el = document.createElement('div');
   el.className = 'chip' + (a==='All' ? ' active' : '');
   el.textContent = a;
@@ -518,16 +633,22 @@ const chipRow = document.getElementById('areaChips');
     render();
   };
   chipRow.appendChild(el);
-});
+  });
+  if(!areas.includes(state.area)) state.area = 'All';
+}
+refreshAreaChips();
 
 document.getElementById('openToggle').onclick = function(){
   state.openOnly = !state.openOnly;
   this.classList.toggle('active', state.openOnly);
   render();
 };
+let searchTimer;
 document.getElementById('searchInput').oninput = function(){
   state.q = this.value.trim().toLowerCase();
   render();
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => loadPlaces(this.value.trim()), 450);
 };
 document.getElementById('sortSelect').onchange = function(){
   state.sort = this.value;
@@ -542,15 +663,16 @@ function tickClock(){
     String(dnow.getSeconds()).padStart(2,'0');
   document.getElementById('clockDate').textContent =
     dnow.toLocaleDateString('en-US', {weekday:'long', month:'short', day:'numeric'});
-  const openNow = CAFES.filter(c => statusFor(c, dnow).open).length;
+  const openNow = activeCafes.filter(c => statusFor(c, dnow).open).length;
   document.getElementById('openCount').textContent = openNow;
+  document.getElementById('openCountSub').textContent = 'from ' + activeCafes.length + ' available cafés';
 }
 
 function render(){
   const dnow = dhakaNow();
   tickClock();
 
-  let withStatus = CAFES.map(c => ({ c, s: statusFor(c, dnow) }));
+  let withStatus = activeCafes.map(c => ({ c, s: statusFor(c, dnow) }));
 
   let list = withStatus.filter(({c}) => {
     if(state.area !== 'All' && c.a !== state.area) return false;
@@ -595,37 +717,41 @@ function render(){
 
   grid.innerHTML = list.map(({c,s,dist}, i) => {
     const priceTag = c.pl ? '৳'.repeat(c.pl) : '';
-    const mapUrl = 'https://www.google.com/maps/place/?q=place_id:' + c.pid;
+    const mapUrl = c.map || 'https://www.google.com/maps/place/?q=place_id:' + encodeURIComponent(c.pid || '');
     const dirUrl = 'https://www.google.com/maps/dir/?api=1&destination=' + c.lat + ',' + c.lng + '&destination_place_id=' + c.pid;
-    const phoneLink = c.ph ? '<a href="tel:' + c.ph.replace(/\s+/g,'') + '">☎ ' + c.ph + '</a>' : '';
+    const phoneLink = c.ph ? '<a href="tel:' + escapeHtml(c.ph.replace(/\s+/g,'')) + '">☎ ' + escapeHtml(c.ph) + '</a>' : '';
     const distHtml = (userLoc && typeof dist === 'number')
       ? '<span class="distance-badge">📍 ' + dist.toFixed(1) + ' km away</span>' : '';
     const picksHtml = c.picks && c.picks.length
-      ? `<div class="picks-wrap"><span class="picks-label">Popular picks</span>${c.picks.map(p=>'<span class="pick-tag">'+p+'</span>').join('')}</div>`
+      ? `<div class="picks-wrap"><span class="picks-label">Popular picks</span>${c.picks.map(p=>'<span class="pick-tag">'+escapeHtml(p)+'</span>').join('')}</div>`
+      : '';
+    const menuHtml = c.menu
+      ? `<a href="${escapeHtml(c.menu)}" target="_blank" rel="noopener">Menu / site ↗</a>`
       : '';
     const gridId = 'wk' + i;
     return `
     <div class="card">
       <div class="card-top">
-        <div class="card-name">${c.n}</div>
+        <div class="card-name">${escapeHtml(c.n)}</div>
         <div class="status-badge ${s.open ? 'open':'closed'}">${s.open ? 'Open' : 'Closed'}</div>
       </div>
       <div class="meta-row">
-        <span class="area-tag">${c.a}</span>
+        <span class="area-tag">${escapeHtml(c.a)}</span>
         <span class="stars">${stars(c.r)}</span>
         <span>${c.r.toFixed(1)} (${c.rc.toLocaleString()})</span>
         ${priceTag ? '<span class="price-tag">'+priceTag+'</span>' : ''}
         ${distHtml}
       </div>
-      <div class="note">${c.note}</div>
+      <div class="note">${escapeHtml(c.note)}</div>
       ${picksHtml}
       <div class="hours-line">${s.label}</div>
       <button class="week-toggle" onclick="document.getElementById('${gridId}').classList.toggle('show')">View full week's hours ▾</button>
       <div class="week-grid" id="${gridId}">${weekGridHtml(c, todayIdx)}</div>
-      <div class="addr">${c.addr}</div>
+      <div class="addr">${escapeHtml(c.addr)}</div>
       <div class="card-actions">
         <a href="${mapUrl}" target="_blank" rel="noopener">Google Maps ↗</a>
         <a href="${dirUrl}" target="_blank" rel="noopener">Directions ↗</a>
+        ${menuHtml}
         ${phoneLink}
       </div>
     </div>`;
@@ -633,6 +759,7 @@ function render(){
 }
 
 render();
+loadPlaces('');
 setInterval(tickClock, 1000);
 setInterval(render, 30000);
 

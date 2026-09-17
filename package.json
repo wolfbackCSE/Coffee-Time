@@ -1,0 +1,10 @@
+{
+  "name": "coffee-time",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "check": "node --check api/places.js"
+  }
+}
