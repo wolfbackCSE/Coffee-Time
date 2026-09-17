@@ -1,6 +1,6 @@
 # Coffee Time — Dhaka
 
-A responsive café discovery site for Dhaka with live Google Places search, ratings, opening hours, distance sorting, Google Maps directions, and menu/website links when a listing provides them. It remains usable with the curated café dataset when the live API is unavailable.
+A responsive café discovery site for Dhaka with live Google Places search across cafés, coffee shops, tea houses, bakeries, dessert spots, and casual restaurants. Results include ratings, opening hours, distance sorting, Google Maps directions, and menu/website links when a listing provides them. It remains usable with the curated café dataset when the live API is unavailable.
 
 ## Publish the frontend
 
@@ -20,16 +20,16 @@ The frontend is a static `index.html`, so it can be deployed to GitHub Pages. Th
 3. Deploy `api/places.js` with Node 18 or newer. `npm run check` validates the function syntax.
 4. Configure the frontend host to proxy `/api/places` to the deployed function, or change the fetch URL in `index.html` to the function's public URL.
 
-The proxy uses Google Text Search with a café type filter, a Dhaka/current-location bias, and a five-minute edge cache. Google Maps/Places attribution, quotas, billing, and its data-use policies still apply. Never put `GOOGLE_PLACES_API_KEY` in `index.html`.
+The proxy uses several Google Text Search category queries with a Dhaka/current-location bias, deduplicates place IDs, and applies a five-minute edge cache. This returns a broader discovery set than the previous single 20-result coffee query. Google Maps/Places attribution, quotas, billing, and its data-use policies still apply. Never put `GOOGLE_PLACES_API_KEY` in `index.html`.
 
 ## What updates automatically
 
 - Dhaka clock: every second.
 - Open/closed café status: recalculated from the stored weekly hours.
-- Results: loaded from Google Places when the proxy is configured, with curated data as a fallback; searches are debounced.
+- Results: loaded from multiple Google Places categories when the proxy is configured, with curated data as a fallback; searches are debounced.
 - “Near me”: uses the visitor’s browser geolocation when permission is granted and reloads live results around that location.
 - Sorts: highest rating, most reviews, name, area, and nearest distance.
 
 ## Important data note
 
-Google Places provides ratings, review counts, hours, phone numbers, websites, and Maps links where available. It does not reliably provide a full menu for every café, so the UI shows a listing website as the menu link when available and uses curated menu highlights for the seeded fallback records. Live Google data is not guaranteed to include every café or every menu item.
+Google Places provides ratings, review counts, hours, phone numbers, websites, and Maps links where available. It does not reliably provide a full menu for every venue, so the UI shows a listing website as the menu link when available and uses curated menu highlights for the seeded fallback records. Live Google data is not guaranteed to include every venue or every menu item.

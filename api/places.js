@@ -1,5 +1,11 @@
 const DEFAULT_LOCATION = { lat: 23.8103, lng: 90.4125 };
 const PLACES_URL = 'https://places.googleapis.com/v1/places:searchText';
+const DISCOVERY_QUERIES = [
+  'cafes in Dhaka',
+  'coffee shops in Dhaka',
+  'tea houses and bakeries in Dhaka',
+  'dessert cafes and casual restaurants in Dhaka'
+];
 
 function json(res, status, body) {
   res.status(status).setHeader('Content-Type', 'application/json');
@@ -63,40 +69,55 @@ function normalize(place) {
   };
 }
 
+async function searchPlaces(textQuery, lat, lng) {
+  const response = await fetch(PLACES_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': process.env.GOOGLE_PLACES_API_KEY,
+      'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.regularOpeningHours,places.nationalPhoneNumber,places.websiteUri,places.editorialSummary,places.googleMapsUri,places.priceLevel'
+    },
+    body: JSON.stringify({
+      textQuery,
+      languageCode: 'en',
+      regionCode: 'BD',
+      maxResultCount: 20,
+      locationBias: { circle: { center: { latitude: lat, longitude: lng }, radius: 15000 } }
+    })
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.error?.message || 'Google Places request failed.');
+  }
+  return payload.places || [];
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') return json(res, 405, { error: 'Only GET is supported.' });
   if (!process.env.GOOGLE_PLACES_API_KEY) {
     return json(res, 503, { error: 'Google Places is not configured. Showing the curated café list instead.' });
   }
 
-  const query = String(req.query?.query || 'coffee shops in Dhaka').trim().slice(0, 120);
+  const requestedQuery = String(req.query?.query || '').trim().slice(0, 120);
   const lat = numberParam(req.query?.lat, DEFAULT_LOCATION.lat);
   const lng = numberParam(req.query?.lng, DEFAULT_LOCATION.lng);
-  const body = {
-    textQuery: query,
-    includedType: 'cafe',
-    languageCode: 'en',
-    regionCode: 'BD',
-    maxResultCount: 20,
-    locationBias: { circle: { center: { latitude: lat, longitude: lng }, radius: 15000 } }
-  };
+  const queries = requestedQuery
+    ? [`cafes, coffee shops, tea houses and bakeries near ${requestedQuery}`]
+    : DISCOVERY_QUERIES;
 
   try {
-    const response = await fetch(PLACES_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': process.env.GOOGLE_PLACES_API_KEY,
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.regularOpeningHours,places.nationalPhoneNumber,places.websiteUri,places.editorialSummary,places.googleMapsUri,places.priceLevel'
-      },
-      body: JSON.stringify(body)
+    const results = await Promise.all(queries.map(query => searchPlaces(query, lat, lng)));
+    const uniquePlaces = new Map();
+    results.flat().forEach(place => {
+      if (place.id && !uniquePlaces.has(place.id)) uniquePlaces.set(place.id, place);
     });
-    const payload = await response.json();
-    if (!response.ok) {
-      return json(res, response.status, { error: payload.error?.message || 'Google Places request failed.' });
-    }
-    return json(res, 200, { source: 'Google Places', query, places: (payload.places || []).map(normalize) });
+    return json(res, 200, {
+      source: 'Google Places',
+      query: requestedQuery || 'Dhaka café discovery',
+      categories: requestedQuery ? ['cafes', 'coffee shops', 'tea houses', 'bakeries'] : ['cafes', 'coffee shops', 'tea houses', 'bakeries', 'dessert cafés', 'casual restaurants'],
+      places: [...uniquePlaces.values()].map(normalize)
+    });
   } catch (error) {
-    return json(res, 502, { error: 'Google Places is temporarily unavailable.' });
+    return json(res, 502, { error: error.message || 'Google Places is temporarily unavailable.' });
   }
 };
