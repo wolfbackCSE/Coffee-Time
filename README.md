@@ -32,4 +32,4 @@ The proxy uses several Google Text Search category queries with a Dhaka/current-
 
 ## Important data note
 
-Google Places provides ratings, review counts, hours, phone numbers, websites, and Maps links where available. It does not reliably provide a full menu for every venue, so the UI shows a listing website as the menu link when available and uses curated menu highlights for the seeded fallback records. Live Google data is not guaranteed to include every venue or every menu item.
+Google Places provides ratings, review counts, hours, phone numbers, websites, and Maps links where available. Every card now includes a website action: verified Google website URLs are labeled “Website / menu”; curated records without a verified URL use a Google search for the venue name labeled “Find website”. This avoids presenting an unverified domain as official. Google does not reliably provide a full menu for every venue, so curated menu highlights remain available for seeded records.
