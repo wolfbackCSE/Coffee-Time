@@ -738,9 +738,9 @@ function render(){
     const picksHtml = c.picks && c.picks.length
       ? `<div class="picks-wrap"><span class="picks-label">Popular picks</span>${c.picks.map(p=>'<span class="pick-tag">'+escapeHtml(p)+'</span>').join('')}</div>`
       : '';
-    const menuHtml = c.menu
-      ? `<a href="${escapeHtml(c.menu)}" target="_blank" rel="noopener">Menu / site ↗</a>`
-      : '';
+    const websiteUrl = c.menu || `https://www.google.com/search?q=${encodeURIComponent(c.n + ' official website Dhaka')}`;
+    const websiteLabel = c.menu ? 'Website / menu ↗' : 'Find website ↗';
+    const menuHtml = `<a href="${escapeHtml(websiteUrl)}" target="_blank" rel="noopener">${websiteLabel}</a>`;
     const gridId = 'wk' + i;
     return `
     <div class="card">
