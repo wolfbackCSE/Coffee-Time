@@ -1,10 +1,8 @@
 const DEFAULT_LOCATION = { lat: 23.8103, lng: 90.4125 };
 const PLACES_URL = 'https://places.googleapis.com/v1/places:searchText';
 const DISCOVERY_QUERIES = [
-  'cafes in Dhaka',
   'coffee shops in Dhaka',
-  'tea houses and bakeries in Dhaka',
-  'dessert cafes and casual restaurants in Dhaka'
+  'cafes in Dhaka'
 ];
 
 function json(res, status, body) {
@@ -102,7 +100,7 @@ module.exports = async function handler(req, res) {
   const lat = numberParam(req.query?.lat, DEFAULT_LOCATION.lat);
   const lng = numberParam(req.query?.lng, DEFAULT_LOCATION.lng);
   const queries = requestedQuery
-    ? [`cafes, coffee shops, tea houses and bakeries near ${requestedQuery}`]
+    ? [`coffee shops and cafes near ${requestedQuery}`]
     : DISCOVERY_QUERIES;
 
   try {
@@ -114,7 +112,7 @@ module.exports = async function handler(req, res) {
     return json(res, 200, {
       source: 'Google Places',
       query: requestedQuery || 'Dhaka café discovery',
-      categories: requestedQuery ? ['cafes', 'coffee shops', 'tea houses', 'bakeries'] : ['cafes', 'coffee shops', 'tea houses', 'bakeries', 'dessert cafés', 'casual restaurants'],
+      categories: ['cafes', 'coffee shops'],
       places: [...uniquePlaces.values()].map(normalize)
     });
   } catch (error) {
