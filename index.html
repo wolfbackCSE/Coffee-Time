@@ -460,6 +460,34 @@
   .card-actions a{color:var(--teal-deep);}
   .card-actions a:focus-visible,.chip:focus-visible,.sort-select:focus-visible,.week-toggle:focus-visible,.search-wrap input:focus-visible{outline:3px solid rgba(255,127,80,.55);outline-offset:3px;}
   .empty-state{color:var(--teal-deep);}
+  .places-directory{max-width:1100px;margin:0 auto;padding:30px 24px 8px;}
+  .places-heading{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:14px;}
+  .places-heading h2{font-family:'Fraunces',serif;font-size:clamp(28px,4vw,42px);line-height:1;margin:0;color:var(--ink);}
+  .places-heading p{max-width:460px;margin:0;color:#52716e;font-size:13px;line-height:1.5;}
+  .place-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;}
+  .place-card{display:block;text-decoration:none;border:1px solid #c8e1dc;border-radius:14px;padding:16px;background:rgba(255,255,255,.72);color:var(--ink);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;}
+  .place-card:hover{transform:translateY(-3px);border-color:var(--teal);box-shadow:0 12px 24px rgba(7,21,27,.10);}
+  .place-card .place-kicker{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--teal-deep);}
+  .place-card strong{display:block;font:600 22px 'Fraunces',serif;margin:8px 0 4px;}
+  .place-card small{color:#52716e;font:500 11px 'JetBrains Mono',monospace;}
+  .place-route{display:none;max-width:1100px;margin:0 auto;padding:24px 24px 0;}
+  .back-link{display:inline-flex;align-items:center;gap:8px;color:var(--teal-deep);font:600 11px 'JetBrains Mono',monospace;text-decoration:none;text-transform:uppercase;letter-spacing:.08em;}
+  .back-link:hover{text-decoration:underline;}
+  .place-route h2{font:600 clamp(34px,6vw,64px) 'Fraunces',serif;color:var(--ink);line-height:.95;margin:20px 0 8px;}
+  .place-route p{max-width:680px;margin:0;color:#52716e;line-height:1.6;}
+  .place-route.active{display:block;}
+  body.place-page .places-directory{display:none;}
+  body.place-page .hero-sub{max-width:680px;}
+  body.place-page .controls{margin-top:22px;}
+  .cafe-image{width:100%;height:150px;object-fit:cover;border-radius:11px;background:linear-gradient(135deg,#0d2730,#55e0c0 55%,#d9ff62);}
+  .card .cafe-image + .card-top{margin-top:2px;}
+  @media(max-width:760px){
+    .places-directory{padding:24px 18px 4px;}
+    .places-heading{display:block;}
+    .places-heading p{margin-top:10px;}
+    .place-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .place-route{padding:20px 18px 0;}
+  }
   footer .credit{border-top-color:#c8e1dc;}
   footer a{color:var(--teal-deep);}
   @media(max-width:760px){
@@ -517,6 +545,19 @@
   </svg>
 </div>
 
+<section class="places-directory" id="placesDirectory" aria-labelledby="placesHeading">
+  <div class="places-heading">
+    <div><div class="eyebrow"><span class="dot"></span> EXPLORE BY PLACE</div><h2 id="placesHeading">Choose your next stop.</h2></div>
+    <p>Open a place to see its full café list, live status, ratings, menus, and directions in one focused view.</p>
+  </div>
+  <div class="place-grid" id="placeGrid"></div>
+</section>
+<section class="place-route" id="placeRoute" aria-labelledby="placeRouteTitle">
+  <a class="back-link" href="/">← Back to all places</a>
+  <h2 id="placeRouteTitle"></h2>
+  <p id="placeRouteDescription"></p>
+</section>
+
 <div class="controls">
   <div class="controls-inner">
     <div class="search-wrap">
@@ -558,6 +599,23 @@
 const CAFES = [{"n": "The Coffee Lounge Bangladesh", "a": "Gulshan", "addr": "House 175A, Rd 61, Dhaka 1212", "lat": 23.8001977, "lng": 90.4118299, "r": 4.5, "rc": 233, "pl": 2, "ph": null, "note": "Cozy first-floor Gulshan 2 spot loved for cashew nut salad and BBQ chicken alongside rich, aromatic coffee.", "pid": "ChIJm0yFtZ7HVTcRRTSkZ58Z6Dw", "hrs": [[480, 60], [480, 60], [480, 60], [480, 60], [480, 60], [480, 60], [480, 60]], "picks": ["Cashew Nut Salad", "BBQ Chicken", "House Coffee"]}, {"n": "Tabaq Coffee | Gulshan Avenue", "a": "Gulshan", "addr": "House 22, Crystal Palace, Road 140, Gulshan Ave, Dhaka 1212", "lat": 23.7769481, "lng": 90.4167733, "r": 4.5, "rc": 4704, "pl": 2, "ph": "+880 1743-440435", "note": "A Dhaka institution — praised for Red Velvet cake, grilled cheese chicken pizza sandwich, and a corporate-friendly vibe.", "pid": "ChIJa9uH-qHHVTcRi8KhMkKTcFo", "hrs": [[450, 0], [450, 0], [450, 0], [450, 0], [450, 0], [450, 0], [450, 0]], "picks": ["Red Velvet Cake", "Grilled Cheese Chicken Pizza Sandwich", "Dark Mocha"]}, {"n": "The Local Coffee Gulshan", "a": "Gulshan", "addr": "58 Gulshan Ave, Dhaka 1212", "lat": 23.7816171, "lng": 90.4169651, "r": 4.4, "rc": 181, "pl": 2, "ph": "+880 1939-899573", "note": "Known for its matcha lineup and double-shot cappuccinos; carrot cake is a standout dessert.", "pid": "ChIJ-5qbHgDHVTcRGPatM_tVhvQ", "hrs": [[480, 0], [480, 0], [480, 0], [540, 120], [540, 120], [540, 120], [480, 0]], "picks": ["Hot Matcha", "Double-Shot Cappuccino", "Carrot Cake"]}, {"n": "Arabika Coffee Anabil Tower", "a": "Gulshan", "addr": "Plot 3, Block NW(J), Gulshan North Ave, Dhaka 1212", "lat": 23.7941597, "lng": 90.4114422, "r": 4.7, "rc": 39, "pl": 2, "ph": "+880 1329-684365", "note": "Upscale, family-friendly with a big smoking zone and free parking; the Red Velvet White Mocha is the signature order.", "pid": "ChIJ8-NmAADHVTcRqqytRdp-WCI", "hrs": [[450, 150], [450, 150], [450, 150], [450, 150], [450, 150], [450, 150], [420, 150]], "picks": ["Red Velvet White Mocha", "Bagel", "Tiramisu Latte"]}, {"n": "2BROS CAFE", "a": "Gulshan", "addr": "5th floor, Suvastu Space Rahman Galleria, 46 Gulshan Ave, Dhaka 1212", "lat": 23.7801743, "lng": 90.417068, "r": 4.6, "rc": 59, "pl": 2, "ph": "+880 1841-133022", "note": "Open till 3–4AM — a late-night favorite with steaks, pasta, pizza and brownie shakes on top of the coffee menu.", "pid": "ChIJ6U7HHorHVTcRxTtNUPuzVQc", "hrs": [[420, 240], [420, 240], [420, 240], [420, 240], [420, 240], [420, 240], [420, 240]], "picks": ["Steak", "Thin Crust Pizza", "Brownie Shake"]}, {"n": "Gloria Jean's Coffees", "a": "Gulshan", "addr": "Block B, House 88, 2B Rd No 71, Dhaka 1212", "lat": 23.8041824, "lng": 90.4130082, "r": 4.4, "rc": 7686, "pl": 2, "ph": "+880 1929-333999", "note": "International chain favorite — cappuccino lovers rate it highly, plus a molten chocolate lava cake worth saving room for.", "pid": "ChIJtwLZ-anHVTcR5THyWF4U7cg", "hrs": [[480, 60], [480, 60], [480, 60], [480, 60], [480, 60], [480, 60], [480, 60]], "picks": ["Cappuccino", "Chocolate Lava Cake", "Pastries"]}, {"n": "IZ Pâtisserie and Café – Gulshan 2", "a": "Gulshan", "addr": "House 11/A, Road 48, Dhaka 1212", "lat": 23.7938905, "lng": 90.4122613, "r": 4.5, "rc": 613, "pl": 2, "ph": "+880 1329-731723", "note": "Patisserie-cafe hybrid — the tiramisu and a well-pulled Americano are the most-mentioned order.", "pid": "ChIJlWX7FwDHVTcR9_wc3FG9iiY", "hrs": [[480, 1380], [480, 1380], [480, 1380], [480, 0], [480, 0], [480, 0], [480, 1380]], "picks": ["Tiramisu", "Americano", "Malted Chocolate Cake"]}, {"n": "NORTH END Coffee Roasters – Shahabuddin Park", "a": "Gulshan", "addr": "Justice Shahabuddin Ahmed Park, Dhaka 1212", "lat": 23.7987354, "lng": 90.4154697, "r": 4.5, "rc": 1326, "pl": 2, "ph": "+880 1313-361600", "note": "A tiny park-side kiosk with a big reputation — white mocha and the 4C sandwich croissant are cult favorites.", "pid": "ChIJNw8KGE3HVTcRBCQ4y-g0Mkk", "hrs": [[420, 1290], [420, 1290], [420, 1290], [420, 1290], [420, 1290], [420, 1290], [420, 1290]], "picks": ["White Mocha", "4C Sandwich Croissant", "Caramel Latte"]}, {"n": "IZ Pâtisserie and Café – Dhanmondi", "a": "Dhanmondi", "addr": "Concord Sohel Square, 75 Satmasjid Road, Dhaka 1205", "lat": 23.7511533, "lng": 90.3676697, "r": 4.7, "rc": 230, "pl": 2, "ph": "+880 1335-259229", "note": "Stylish and photogenic — Biscoff cheesecake and pesto pasta come up again and again in reviews.", "pid": "ChIJsYoYYQC_VTcRfu_ZofIAVKw", "hrs": [[480, 1380], [480, 1380], [480, 1380], [480, 0], [480, 0], [480, 0], [480, 1380]], "picks": ["Biscoff Cheesecake", "Pesto Pasta", "Chicken Tacos"]}, {"n": "NORTH END Coffee Roasters – Dhanmondi", "a": "Dhanmondi", "addr": "House 57, Old Ahmed & Kazi Tower, Rd 2/Satmasjid Rd, Dhaka 1205", "lat": 23.7383992, "lng": 90.3781958, "r": 4.6, "rc": 7034, "pl": 2, "ph": "+880 1313-361600", "note": "A laptop-and-book haven with free wifi; the salted caramel latte and Kenyan Summer pour-over are top picks.", "pid": "ChIJu5BZvvC5VTcRtDzAuHwITBI", "hrs": [[450, 1350], [450, 1350], [450, 1350], [450, 1350], [450, 1350], [450, 1350], [450, 1350]], "picks": ["Salted Caramel Latte", "Kenyan Summer Pour-Over", "Chocolate Chip Cookie"]}, {"n": "Beans & Aroma Coffees – Dhanmondi", "a": "Dhanmondi", "addr": "Satmasjid Road, Dhaka 1205", "lat": 23.7473131, "lng": 90.3703802, "r": 4.4, "rc": 418, "pl": 2, "ph": "+880 9613-810910", "note": "Has a dedicated smoking corner; Spanish Latte and mochas draw repeat visitors.", "pid": "ChIJzasBSH6_VTcR428FjkNh-ow", "hrs": [[480, 60], [480, 60], [480, 60], [480, 60], [480, 60], [480, 60], [480, 60]], "picks": ["Spanish Latte", "Mocha", "Cookies"]}, {"n": "The Local Coffee Dhanmondi", "a": "Dhanmondi", "addr": "Level 6, Rangs Fortune Square, Dhaka 1209", "lat": 23.7389325, "lng": 90.3788271, "r": 4.7, "rc": 25, "pl": 2, "ph": "+880 1922-506773", "note": "Every coffee is pulled with a double espresso shot as standard; the Polish-style bagel sandwich is a standout.", "pid": "ChIJLf4mXQC5VTcRDjOLjXzw5sM", "hrs": [[540, 0], [540, 0], [540, 0], [540, 0], [540, 0], [540, 0], [540, 0]], "picks": ["Bagel Sandwich", "Croissant Sandwich", "Biscoff Cheesecake"]}, {"n": "Tabaq Coffee | Dhanmondi", "a": "Dhanmondi", "addr": "House 37, Road 2, Dhaka 1205", "lat": 23.7383517, "lng": 90.3779752, "r": 4.6, "rc": 1585, "pl": 2, "ph": "+880 1710-963066", "note": "Loyalty card gives a free drink after 10 visits; the Ultimate Chocolate Cake and Hazelnut Latte are favorites.", "pid": "ChIJLQ9J9XLHVTcRw-gSKKXQJCU", "hrs": [[480, 1350], [480, 1350], [480, 1350], [480, 1350], [480, 1350], [480, 1350], [480, 1350]], "picks": ["Ultimate Chocolate Cake", "Hazelnut Latte", "Banana Bread"]}, {"n": "Doppio Coffee", "a": "Dhanmondi", "addr": "House 35 (Basement), Ahmad & Kazi Tower, Road 2, Dhaka 1209", "lat": 23.7384761, "lng": 90.3781944, "r": 4.3, "rc": 41, "pl": 2, "ph": null, "note": "Small and quiet, competitively priced; the cookies-and-cream affogato and salted caramel latte stand out.", "pid": "ChIJ6xVLAAC5VTcRcTQqtZyHqCY", "hrs": [[480, 1380], [480, 1380], [480, 1380], [480, 1380], [480, 1380], [480, 1380], [480, 1380]], "picks": ["Cookies & Cream Affogato", "Salted Caramel Latte", "Biscoff Cheesecake"]}, {"n": "Brew Buddies", "a": "Dhanmondi", "addr": "Concord Sohel Square, 75 Satmasjid Road, Dhaka 1209", "lat": 23.7511533, "lng": 90.3676697, "r": 4.2, "rc": 296, "pl": 2, "ph": "+880 1338-527342", "note": "Separate smoking/non-smoking zones; the lasagna and chocolate cheesecake are repeatedly praised.", "pid": "ChIJn4XuNQm_VTcRDVlY5JF2Jqs", "hrs": [[630, 1410], [630, 1410], [630, 1410], [630, 1410], [630, 1410], [630, 1410], [630, 1410]], "picks": ["Lasagna", "Chocolate Cheesecake", "Loaded Fries"]}, {"n": "Royal Cafe Experience", "a": "Dhanmondi", "addr": "Green Rowshanara Tower, 755 Satmasjid Road, Dhaka 1209", "lat": 23.7475403, "lng": 90.3699268, "r": 4.5, "rc": 113, "pl": 2, "ph": "+880 1322-859555", "note": "Calm, quiet interior good for solo work or informal meetings; espresso gets consistent praise.", "pid": "ChIJV9MOlPS_VTcRP72jcxq6zDY", "hrs": [[450, 1410], [450, 1410], [450, 1410], [450, 1410], [450, 1410], [450, 1410], [450, 1410]], "picks": ["Espresso", "English Breakfast", "Ocean Blue"]}, {"n": "BROWN Coffee Roasters, Banani", "a": "Banani", "addr": "Momen Bari Heights, House 157, Road 12, Block E, Dhaka 1213", "lat": 23.7928787, "lng": 90.408437, "r": 4.6, "rc": 71, "pl": 2, "ph": "+880 1339-945119", "note": "Corner-plot cafe with an open, visible layout; the house special mocha is the top order.", "pid": "ChIJI4cykUnHVTcRhcceW2-kjAs", "hrs": [[420, 1380], [420, 1380], [420, 1380], [420, 1380], [420, 1380], [420, 1380], [420, 1380]], "picks": ["Special Mocha", "Tiramisu Latte", "Brownie"]}, {"n": "Awake Coffee Roasters, Banani", "a": "Banani", "addr": "House 25, Road 11, Dhaka 1212", "lat": 23.7902636, "lng": 90.4081206, "r": 4.8, "rc": 625, "pl": 2, "ph": "+880 1404-460921", "note": "Roastery that also runs a barista training academy; known for V60 pour-over and latte art.", "pid": "ChIJBbwHAQDHVTcRF4CngPgeP1o", "hrs": [[510, 0], [510, 0], [510, 0], [510, 0], [510, 0], [510, 0], [510, 0]], "picks": ["V60 Pour-Over", "Latte Art Espresso", "Cappuccino"]}, {"n": "Oro Roasters Banani", "a": "Banani", "addr": "Top Floor, Block E, 116 Road 11, Dhaka 1213", "lat": 23.7904343, "lng": 90.4081211, "r": 4.5, "rc": 90, "pl": 2, "ph": "+880 1814-006423", "note": "Rooftop views with indoor/outdoor seating; cream of mushroom soup and lava cake are frequently ordered.", "pid": "ChIJ6SSm9lvHVTcRkPk6V-SShAw", "hrs": [[720, 0], [720, 0], [720, 0], [720, 0], [720, 0], [720, 0], [720, 0]], "picks": ["Cream of Mushroom Soup", "Lava Cake", "Blueberry Shake"]}, {"n": "NORTH END Coffee Roasters – Borak Mehnur", "a": "Banani", "addr": "51B Kemal Ataturk Ave, Dhaka 1212", "lat": 23.7938498, "lng": 90.4064674, "r": 4.6, "rc": 4866, "pl": 2, "ph": "+880 1313-361600", "note": "Busy during office hours — regulars recommend the Americano, Café Frado and getting orders to go.", "pid": "ChIJ985lAe3HVTcRNPSdeny54Ws", "hrs": [[420, 1350], [420, 1350], [420, 1350], [420, 1350], [420, 1380], [420, 1350], [420, 1350]], "picks": ["Americano", "Café Frado", "Cinnamon Roll"]}, {"n": "Brewers Den", "a": "Banani", "addr": "28 Ahmed Tower, 30 Kemal Ataturk Ave, Dhaka 1213", "lat": 23.7938074, "lng": 90.4047139, "r": 4.6, "rc": 599, "pl": 2, "ph": "+880 1839-019566", "note": "Sandwich-forward menu — the salt beef sandwich and legendary hot chocolate are what people come back for.", "pid": "ChIJT1GfTADHVTcRhtU1V_AMNQM", "hrs": [[510, 60], [510, 60], [510, 60], [510, 120], [600, 120], [510, 60], [510, 60]], "picks": ["Salt Beef Sandwich", "Hot Chocolate", "NY Style Hot Dog"]}, {"n": "Arabika Coffee Banani 11", "a": "Banani", "addr": "Plot 81, Road 11, Dhaka 1212", "lat": 23.7903265, "lng": 90.4092633, "r": 4.5, "rc": 49, "pl": 2, "ph": "+880 1329-684363", "note": "Newer, quieter branch with complimentary brownies alongside the cappuccino.", "pid": "ChIJYz-wdwDHVTcRk0RhwTOFyKU", "hrs": [[480, 1380], [480, 1380], [480, 1380], [480, 1380], [480, 1380], [480, 1380], [480, 1380]], "picks": ["Cappuccino", "Brownie", "Strawberry Paradise"]}, {"n": "Emerald Bakery & Cafe", "a": "Banani", "addr": "House 80, Road 11, Dhaka 1212", "lat": 23.7902388, "lng": 90.4093889, "r": 4.4, "rc": 827, "pl": 2, "ph": "+880 1832-398120", "note": "Bakery-cafe with a peaceful outdoor courtyard; the coconut sago ice cream and triple-layer chocolate cake are favorites.", "pid": "ChIJV0FJdJbHVTcR9EccYmjcCHo", "hrs": [[540, 1350], [540, 1350], [540, 1350], [540, 1350], [540, 1350], [540, 1350], [540, 1350]], "picks": ["Coconut Sago Ice Cream", "Triple-Layer Chocolate Cake", "Triple B Burger"]}, {"n": "Brëwhaus Coffee Roasters", "a": "Uttara", "addr": "House 33, Sector 3, Road 15 Rabindra Sarani, Dhaka 1230", "lat": 23.8673615, "lng": 90.396314, "r": 5.0, "rc": 24, "pl": 2, "ph": "+880 1783-826302", "note": "Roasts its own Brazilian/Colombian blend in-house; the banana waffle and beef croissant salami are standouts.", "pid": "ChIJhbKyFUTFVTcRLUSIdfzSwfI", "hrs": [[630, 1350], [630, 1350], [630, 1350], [630, 1380], [630, 1380], [630, 1380], [630, 1350]], "picks": ["Banana Waffle", "Beef Croissant Salami", "Americano"]}, {"n": "Coal & Coffee", "a": "Uttara", "addr": "House 60, Sonargaon Janapath, Dhaka 1230", "lat": 23.874597, "lng": 90.3948305, "r": 4.4, "rc": 1251, "pl": 2, "ph": "+880 1720-440445", "note": "Rustic brick-and-fairy-light interior with a rooftop; the Salted Caramel Moist Delight and iced Americano are popular.", "pid": "ChIJfWCyaOnFVTcRq4RWZmFpmlQ", "hrs": [[660, 0], [660, 0], [660, 0], [660, 0], [660, 0], [660, 0], [660, 0]], "picks": ["Salted Caramel Moist Delight", "Iced Americano", "BBQ Chicken Platter"]}, {"n": "Phin Cafe – Vietnamese Coffee", "a": "Uttara", "addr": "25 Garib-E-Newaz Ave, Dhaka 1230", "lat": 23.8777694, "lng": 90.3906205, "r": 4.9, "rc": 120, "pl": 1, "ph": "+880 1896-131067", "note": "A tiny roadside stall doing authentic Vietnamese hot/cold coffee for as little as ৳70 — evening hours only.", "pid": "ChIJcWKkEQDFVTcRnuWSvfN0nsc", "hrs": [[1020, 1380], [1020, 1380], [1020, 1380], [1020, 1380], [1020, 1380], [1020, 1380], [1020, 1380]], "picks": ["Vietnamese Hot Coffee", "Vietnamese Iced Coffee"]}, {"n": "Crimson Cup Uttara", "a": "Uttara", "addr": "Quantum Mostafa Tower, Gausul Azam Ave, Sector 13, Dhaka 1230", "lat": 23.8695356, "lng": 90.3898276, "r": 4.3, "rc": 3119, "pl": 2, "ph": "+880 1936-000287", "note": "A go-to hangout with a separate reading area; frozen and hot drinks come in multiple sizes.", "pid": "ChIJf9_D4xnEVTcRoG22FMES2NM", "hrs": [[540, 1380], [540, 1380], [540, 1380], [540, 1380], [540, 1380], [540, 1380], [540, 1380]], "picks": ["Iced Latte", "Breakfast Sandwich", "Waffles"]}, {"n": "NORTH END Coffee Roasters – Liberty Tower", "a": "Uttara", "addr": "Plot 19, Liberty Tower, Dhaka 1230", "lat": 23.8630624, "lng": 90.3996904, "r": 4.6, "rc": 363, "pl": 2, "ph": "+880 1313-361600", "note": "Two-storey branch — the 3rd floor is roomier; Iced Kenya Summer and Salted Caramel Frappe are highly rated.", "pid": "ChIJLZ843ujFVTcRsg_BNZ-Vhtk", "hrs": [[420, 1350], [420, 1350], [420, 1350], [420, 1380], [420, 1380], [420, 1380], [420, 1350]], "picks": ["Iced Kenya Summer", "Salted Caramel Frappe", "Classic Cappuccino"]}, {"n": "Beans & Aroma Coffees – Uttara", "a": "Uttara", "addr": "House 9, Road 18, Dhaka 1230", "lat": 23.862026, "lng": 90.3938947, "r": 4.3, "rc": 3168, "pl": 2, "ph": "+880 1314-562361", "note": "Late-night option with a dedicated smoking zone; the Spanish Latte and T-bone steak get called out often.", "pid": "ChIJrXmvPdfFVTcRU_GL0Duk2kU", "hrs": [[480, 60], [480, 60], [480, 60], [480, 60], [480, 60], [480, 60], [480, 60]], "picks": ["Spanish Latte", "T-Bone Steak", "Blueberry Cheesecake"]}, {"n": "Arabika Coffee Bashundhara Block A", "a": "Bashundhara", "addr": "Plot 12/D & 12E, Main Avenue, Dhaka 1229", "lat": 23.812678, "lng": 90.4281871, "r": 4.8, "rc": 71, "pl": 2, "ph": "+880 1313-487391", "note": "Small, calm and well-decorated; the customizable Mocha (ask for less sugar syrup) is a top pick.", "pid": "ChIJjY7aYADHVTcRGkJbnAFmmUs", "hrs": [[420, 1380], [420, 1380], [420, 1380], [420, 1380], [420, 1380], [420, 1380], [420, 1380]], "picks": ["Mocha (custom sweetness)", "Croissant", "Bagel"]}, {"n": "Brew Splash Bashundhara R/A", "a": "Bashundhara", "addr": "Plot 1136/A, Japan Street, Dhaka 1229", "lat": 23.8143493, "lng": 90.4385557, "r": 4.2, "rc": 178, "pl": 2, "ph": "+880 1897-979090", "note": "Roadside parking, no reservation needed; also serves an English breakfast in the morning.", "pid": "ChIJ0yvKIgDHVTcR4S6fPF-gtGg", "hrs": [[450, 1380], [450, 1380], [450, 1380], [450, 1380], [450, 1380], [450, 1380], [450, 1380]], "picks": ["English Breakfast", "Alfredo Pasta", "Cream Hazelnut"]}, {"n": "Café Leo (Main Branch)", "a": "Bashundhara", "addr": "Road 14, Bashundhara R/A, Dhaka", "lat": 23.8164072, "lng": 90.4367847, "r": 4.1, "rc": 176, "pl": 2, "ph": "+880 1704-160584", "note": "Spacious with a fountain-lined backyard; creamy chicken pasta and basbousa are the standout orders.", "pid": "ChIJb4igZgDHVTcRGy58EfXJr1w", "hrs": [[480, 1380], [480, 1380], [480, 1380], [480, 1380], [480, 1380], [480, 1380], [480, 1380]], "picks": ["Creamy Chicken Pasta", "Basbousa", "Beef Steak"]}, {"n": "Crimson Cup Bashundhara", "a": "Bashundhara", "addr": "Plot 2, Sayem Sobhan Anvir Rd, Dhaka 1229", "lat": 23.8234522, "lng": 90.4295978, "r": 4.2, "rc": 1172, "pl": 2, "ph": "+880 1926-501095", "note": "White mocha and freeze mocha are the most-cited orders; has both indoor and (mosquito-prone) outdoor seating.", "pid": "ChIJIYQO5BHHVTcRzpMlgxSvjIo", "hrs": [[540, 1380], [540, 1380], [540, 1380], [540, 1380], [600, 1380], [540, 1380], [540, 1380]], "picks": ["White Mocha", "Freeze Mocha", "Sandwiches"]}, {"n": "Awake Cafe & Bistro", "a": "Bashundhara", "addr": "House 1113, Road 17, Block I, Dhaka", "lat": 23.8139599, "lng": 90.4376499, "r": 4.3, "rc": 1788, "pl": 2, "ph": "+880 1850-228883", "note": "Free wifi, roadside parking; hazelnut coffee and cheesecake brownie are frequently recommended.", "pid": "ChIJ7VYk89fHVTcRcO6B21GPDMk", "hrs": [[450, 1380], [450, 1380], [450, 1380], [450, 1380], [450, 1380], [450, 1380], [450, 1380]], "picks": ["Hazelnut Coffee", "Cheesecake Brownie", "Cherry Ice Tea"]}, {"n": "IZ Pâtisserie and Café – Mirpur", "a": "Mirpur", "addr": "House 45, Road 7, Dhaka 1216", "lat": 23.8272776, "lng": 90.3643858, "r": 4.4, "rc": 1237, "pl": 2, "ph": "+880 1770-024245", "note": "Window seats look onto the Metro line; cappuccino comes with a complimentary chocolate.", "pid": "ChIJG4Uomd3FVTcR_tdJhPHTgvE", "hrs": [[480, 1380], [480, 1380], [480, 1380], [480, 0], [480, 0], [480, 0], [480, 1380]], "picks": ["Cappuccino", "Brownie", "Sandwiches"]}, {"n": "Coffee House", "a": "Mirpur", "addr": "House 1-2, Block B, Road 11, Dhaka 1216", "lat": 23.8067711, "lng": 90.3727583, "r": 4.9, "rc": 12, "pl": 2, "ph": "+880 1958-479675", "note": "Hidden inside Hope Market with an 80s–90s nostalgic interior; affordable and cozy for long hangouts.", "pid": "ChIJfaqUeU_BVTcRSvHl4BsrxU4", "hrs": [[540, 1380], [540, 1380], [540, 1380], [540, 1380], [540, 1380], [540, 1380], [540, 1380]], "picks": ["House Coffee", "Light Snacks"]}, {"n": "The Stories Cafe", "a": "Mirpur", "addr": "House 109, Street 1, Block A, Mirpur 2, Dhaka 1216", "lat": 23.8038623, "lng": 90.3532856, "r": 4.2, "rc": 98, "pl": 2, "ph": "+880 1329-702344", "note": "Greenery-filled 'hidden oasis' vibe; the barbecue chicken momo is the most recommended dish.", "pid": "ChIJ5RrNtGnBVTcRi0HIbzubwTE", "hrs": [[660, 1380], [660, 1380], [660, 1380], [660, 1380], [840, 1410], [660, 1380], [660, 1380]], "picks": ["BBQ Chicken Momo", "Singara", "Mint Lemonade"]}];
 
 const AREAS = [...new Set(CAFES.map(c => c.a))];
+const PLACE_META = {
+  Banani: { slug:'banani', description:'A polished coffee corridor with independent roasters, late-night cafés, and easy access from central Dhaka.' },
+  Bashundhara: { slug:'bashundhara', description:'Explore relaxed neighbourhood cafés and coffee spots around Bashundhara Residential Area.' },
+  Dhanmondi: { slug:'dhanmondi', description:'Find laptop-friendly cafés, quiet corners, and well-loved coffee stops around Satmasjid Road and Dhanmondi.' },
+  Gulshan: { slug:'gulshan', description:'Discover coffee, conversation, and late-night café energy across Gulshan 1 and Gulshan 2.' },
+  Mirpur: { slug:'mirpur', description:'A growing café scene with affordable coffee, Metro-accessible spots, and relaxed neighbourhood hangouts.' },
+  Uttara: { slug:'uttara', description:'Browse roasters, Vietnamese coffee, and late-night café options across Uttara sectors.' }
+};
+const PLACE_BY_SLUG = Object.fromEntries(Object.entries(PLACE_META).map(([name, meta]) => [meta.slug, {name, ...meta}]));
+const GENERIC_CAFE_IMAGE = 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=80';
+
+function placeFromPath(){
+  const match = window.location.pathname.match(/\/places\/([^/]+)/i);
+  return match ? PLACE_BY_SLUG[decodeURIComponent(match[1]).toLowerCase()] || null : null;
+}
+
+let currentPlace = placeFromPath();
 
 function fmtTime(mins){
   let h = Math.floor(mins/60), m = mins%60;
@@ -642,6 +700,45 @@ let userLoc = null;
 let activeCafes = CAFES;
 let requestId = 0;
 
+function renderPlaceDirectory(){
+  const placeGrid = document.getElementById('placeGrid');
+  placeGrid.innerHTML = Object.entries(PLACE_META).map(([name, meta]) => {
+    const count = CAFES.filter(c => c.a === name).length;
+    return `<a class="place-card" href="/places/${meta.slug}" data-place-link>
+      <span class="place-kicker">Dhaka district</span>
+      <strong>${escapeHtml(name)}</strong>
+      <small>${count} café${count === 1 ? '' : 's'} · Explore →</small>
+    </a>`;
+  }).join('');
+}
+
+function applyPlaceRoute(){
+  currentPlace = placeFromPath();
+  document.body.classList.toggle('place-page', Boolean(currentPlace));
+  const route = document.getElementById('placeRoute');
+  const title = document.getElementById('placeRouteTitle');
+  const description = document.getElementById('placeRouteDescription');
+  const heroTitle = document.querySelector('.hero h1');
+  const heroSub = document.querySelector('.hero-sub');
+  if(currentPlace){
+    route.classList.add('active');
+    title.textContent = currentPlace.name;
+    description.textContent = currentPlace.description;
+    heroTitle.innerHTML = escapeHtml(currentPlace.name) + '<br><em>Cafés</em>';
+    heroSub.innerHTML = '<b>Your ' + escapeHtml(currentPlace.name) + ' coffee map.</b> Browse every café in this place with live status, ratings, menus, and directions.';
+    state.area = currentPlace.name;
+    state.q = '';
+    document.getElementById('searchInput').value = '';
+  }else{
+    route.classList.remove('active');
+    heroTitle.innerHTML = 'Coffee<br><em>Time</em>';
+    heroSub.innerHTML = '<b>Find your next coffee spot in Dhaka.</b> Search cafés and coffee shops by area, opening time, distance, rating, reviews, and menus.';
+    state.area = 'All';
+  }
+  refreshAreaChips();
+  render();
+}
+
 function showError(message){
   const banner = document.getElementById('errorBanner');
   banner.textContent = message;
@@ -654,7 +751,8 @@ async function loadPlaces(query){
   loading.classList.add('show');
   showError('');
   const params = new URLSearchParams();
-  if(query) params.set('query', query);
+  const discoveryQuery = currentPlace ? `${currentPlace.name} Dhaka` : query;
+  if(discoveryQuery) params.set('query', discoveryQuery);
   if(userLoc){
     params.set('lat', userLoc.lat);
     params.set('lng', userLoc.lng);
@@ -785,6 +883,10 @@ function render(){
   let withStatus = activeCafes.map(c => ({ c, s: statusFor(c, dnow) }));
 
   let list = withStatus.filter(({c}) => {
+    if(currentPlace){
+      const placeText = (c.a + ' ' + c.addr + ' ' + c.n).toLowerCase();
+      if(!placeText.includes(currentPlace.name.toLowerCase())) return false;
+    }
     if(state.area !== 'All' && c.a !== state.area) return false;
     if(state.q){
       const hay = (c.n + ' ' + c.a + ' ' + c.addr).toLowerCase();
@@ -812,7 +914,7 @@ function render(){
   const empty = document.getElementById('emptyState');
   document.getElementById('resultCount').textContent =
     list.length + (list.length===1 ? ' café' : ' cafés') +
-    (state.area!=='All' ? ' in ' + state.area : ' across Dhaka') +
+    (currentPlace ? ' in ' + currentPlace.name : state.area!=='All' ? ' in ' + state.area : ' across Dhaka') +
     (state.openOnly ? ' · open now' : '');
 
   if(list.length===0){
@@ -841,6 +943,7 @@ function render(){
     const gridId = 'wk' + i;
     return `
     <div class="card">
+      <img class="cafe-image" src="${escapeHtml(c.image || GENERIC_CAFE_IMAGE)}" alt="" loading="lazy" onerror="this.src='${GENERIC_CAFE_IMAGE}'">
       <div class="card-top">
         <div class="card-name">${escapeHtml(c.n)}</div>
         <div class="status-badge ${s.open ? 'open':'closed'}">${s.open ? 'Open' : 'Closed'}</div>
@@ -868,10 +971,25 @@ function render(){
   }).join('');
 }
 
-render();
-loadPlaces('');
+renderPlaceDirectory();
+applyPlaceRoute();
+loadPlaces(currentPlace ? currentPlace.name : '');
 setInterval(tickClock, 1000);
 setInterval(render, 30000);
+
+document.addEventListener('click', event => {
+  const link = event.target.closest('[data-place-link]');
+  if(!link) return;
+  event.preventDefault();
+  history.pushState({}, '', link.getAttribute('href'));
+  applyPlaceRoute();
+  loadPlaces(currentPlace.name);
+  window.scrollTo({top:0, behavior:'smooth'});
+});
+window.addEventListener('popstate', () => {
+  applyPlaceRoute();
+  loadPlaces(currentPlace ? currentPlace.name : '');
+});
 
 // Keep live status fresh when users return to the tab or reconnect.
 document.addEventListener('visibilitychange', () => { if(!document.hidden) render(); });
