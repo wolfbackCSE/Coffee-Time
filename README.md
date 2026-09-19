@@ -30,6 +30,12 @@ The proxy uses café and coffee-shop Google Text Search queries with a Dhaka/cur
 - “Near me”: uses the visitor’s browser geolocation when permission is granted and reloads live results around that location.
 - Sorts: highest rating, most reviews, name, area, and nearest distance.
 
+## Dynamic place pages
+
+The home page builds its place directory from the `PLACE_META` object and the existing `CAFES` data in `index.html`. Each place card opens the reusable route `/places/{slug}` (for example `/places/dhanmondi`), where the same cafe-card renderer shows every matching cafe, live status, ratings, hours, menu/website links, and directions.
+
+To add a place, add one entry to `PLACE_META` with a display name, slug, and description. To add a cafe, add one object to `CAFES` with its `a` area, name, address, note, ratings, hours, and any available links. No new HTML page is needed. `404.html` loads the app shell for GitHub Pages so direct navigation and refreshes on `/places/...` continue to work.
+
 ## Important data note
 
 Google Places provides ratings, review counts, hours, phone numbers, websites, and Maps links where available. Every card now includes a website action: verified Google website URLs are labeled “Website / menu”; curated records without a verified URL use a Google search for the venue name labeled “Find website”. This avoids presenting an unverified domain as official. Google does not reliably provide a full menu for every venue, so curated menu highlights remain available for seeded records.
