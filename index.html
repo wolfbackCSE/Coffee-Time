@@ -553,7 +553,7 @@
   <div class="place-grid" id="placeGrid"></div>
 </section>
 <section class="place-route" id="placeRoute" aria-labelledby="placeRouteTitle">
-  <a class="back-link" href="/">← Back to all places</a>
+  <a class="back-link" id="backToPlaces" href="./">← Back to all places</a>
   <h2 id="placeRouteTitle"></h2>
   <p id="placeRouteDescription"></p>
 </section>
@@ -609,6 +609,13 @@ const PLACE_META = {
 };
 const PLACE_BY_SLUG = Object.fromEntries(Object.entries(PLACE_META).map(([name, meta]) => [meta.slug, {name, ...meta}]));
 const GENERIC_CAFE_IMAGE = 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=80';
+
+function appBasePath(){
+  const path = window.location.pathname;
+  const marker = path.indexOf('/places/');
+  if(marker >= 0) return path.slice(0, marker + 1);
+  return path.endsWith('/') ? path : path.slice(0, path.lastIndexOf('/') + 1);
+}
 
 function placeFromPath(){
   const match = window.location.pathname.match(/\/places\/([^/]+)/i);
@@ -704,7 +711,7 @@ function renderPlaceDirectory(){
   const placeGrid = document.getElementById('placeGrid');
   placeGrid.innerHTML = Object.entries(PLACE_META).map(([name, meta]) => {
     const count = CAFES.filter(c => c.a === name).length;
-    return `<a class="place-card" href="/places/${meta.slug}" data-place-link>
+    return `<a class="place-card" href="${appBasePath()}places/${meta.slug}" data-place-link>
       <span class="place-kicker">Dhaka district</span>
       <strong>${escapeHtml(name)}</strong>
       <small>${count} café${count === 1 ? '' : 's'} · Explore →</small>
@@ -985,6 +992,15 @@ document.addEventListener('click', event => {
   applyPlaceRoute();
   loadPlaces(currentPlace.name);
   window.scrollTo({top:0, behavior:'smooth'});
+});
+document.getElementById('backToPlaces').addEventListener('click', event => {
+  event.preventDefault();
+  const cameFromThisApp = document.referrer.startsWith(window.location.origin) && window.history.length > 1;
+  if(cameFromThisApp){
+    window.history.back();
+  }else{
+    window.location.assign(appBasePath());
+  }
 });
 window.addEventListener('popstate', () => {
   applyPlaceRoute();
