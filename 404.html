@@ -10,13 +10,17 @@
   <script>
     (async function () {
       try {
-        var response = await fetch('/index.html');
+        var path = window.location.pathname;
+        var marker = path.indexOf('/places/');
+        var base = marker >= 0 ? path.slice(0, marker + 1)
+          : (path.endsWith('/') ? path : path.slice(0, path.lastIndexOf('/') + 1));
+        var response = await fetch(base + 'index.html');
         if (!response.ok) throw new Error('Unable to load the app shell.');
         document.open();
         document.write(await response.text());
         document.close();
       } catch (error) {
-        document.body.innerHTML = '<p>Could not load Coffee Time. <a href="/">Return home</a>.</p>';
+        document.body.innerHTML = '<p>Could not load Coffee Time. <a href="' + base + '">Return home</a>.</p>';
       }
     }());
   </script>

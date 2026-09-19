@@ -36,6 +36,8 @@ The home page builds its place directory from the `PLACE_META` object and the ex
 
 To add a place, add one entry to `PLACE_META` with a display name, slug, and description. To add a cafe, add one object to `CAFES` with its `a` area, name, address, note, ratings, hours, and any available links. No new HTML page is needed. `404.html` loads the app shell for GitHub Pages so direct navigation and refreshes on `/places/...` continue to work.
 
+The hero cover image is stored at `assets/coffee-cover.png`. The interface includes staggered place/café card entrances, cover-led hero styling, image hover motion, and automatic reduced-motion support.
+
 ## Important data note
 
 Google Places provides ratings, review counts, hours, phone numbers, websites, and Maps links where available. Every card now includes a website action: verified Google website URLs are labeled “Website / menu”; curated records without a verified URL use a Google search for the venue name labeled “Find website”. This avoids presenting an unverified domain as official. Google does not reliably provide a full menu for every venue, so curated menu highlights remain available for seeded records.

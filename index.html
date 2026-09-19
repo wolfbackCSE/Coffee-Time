@@ -404,11 +404,13 @@
     isolation:isolate;
     min-height:470px;
     background:
+      linear-gradient(90deg,rgba(7,21,27,.96) 0%,rgba(7,21,27,.78) 46%,rgba(7,21,27,.42) 100%),
+      url('assets/coffee-cover.png') center right/cover no-repeat,
       linear-gradient(rgba(85,224,192,.06) 1px,transparent 1px),
       linear-gradient(90deg,rgba(85,224,192,.06) 1px,transparent 1px),
       radial-gradient(circle at 78% 22%,rgba(85,224,192,.22),transparent 18rem),
       #07151b;
-    background-size:40px 40px,40px 40px,auto;
+    background-size:auto,cover,40px 40px,40px 40px,auto;
     padding:22px 24px 54px;
   }
   .hero:after{
@@ -467,6 +469,7 @@
   .place-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;}
   .place-card{display:block;text-decoration:none;border:1px solid #c8e1dc;border-radius:14px;padding:16px;background:rgba(255,255,255,.72);color:var(--ink);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;}
   .place-card:hover{transform:translateY(-3px);border-color:var(--teal);box-shadow:0 12px 24px rgba(7,21,27,.10);}
+  .place-card:focus-visible,.back-link:focus-visible{outline:3px solid rgba(255,127,80,.55);outline-offset:3px;}
   .place-card .place-kicker{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--teal-deep);}
   .place-card strong{display:block;font:600 22px 'Fraunces',serif;margin:8px 0 4px;}
   .place-card small{color:#52716e;font:500 11px 'JetBrains Mono',monospace;}
@@ -499,7 +502,17 @@
   }
   @media(prefers-reduced-motion:no-preference){
     .hero-inner{animation:hero-arrival .7s cubic-bezier(.2,.8,.2,1) both;}
+    .place-card{animation:card-rise .55s cubic-bezier(.2,.8,.2,1) both;}
+    .place-card:nth-child(2){animation-delay:.05s}.place-card:nth-child(3){animation-delay:.1s}.place-card:nth-child(4){animation-delay:.15s}.place-card:nth-child(5){animation-delay:.2s}.place-card:nth-child(6){animation-delay:.25s}
+    .card{animation:card-rise .55s cubic-bezier(.2,.8,.2,1) both;}
+    .card:nth-child(2){animation-delay:.05s}.card:nth-child(3){animation-delay:.1s}.card:nth-child(4){animation-delay:.15s}.card:nth-child(5){animation-delay:.2s}.card:nth-child(6){animation-delay:.25s}
+    .cafe-image{transition:transform .45s ease,filter .45s ease;}
+    .card:hover .cafe-image{transform:scale(1.025);filter:saturate(1.08);}
     @keyframes hero-arrival{from{opacity:0;transform:translateY(12px);filter:blur(5px)}to{opacity:1;transform:none;filter:none}}
+    @keyframes card-rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important;}
   }
 </style>
 </head>
@@ -553,7 +566,7 @@
   <div class="place-grid" id="placeGrid"></div>
 </section>
 <section class="place-route" id="placeRoute" aria-labelledby="placeRouteTitle">
-  <a class="back-link" href="/">← Back to all places</a>
+  <a class="back-link" id="backToPlaces" href="./">← Back to all places</a>
   <h2 id="placeRouteTitle"></h2>
   <p id="placeRouteDescription"></p>
 </section>
@@ -609,6 +622,13 @@ const PLACE_META = {
 };
 const PLACE_BY_SLUG = Object.fromEntries(Object.entries(PLACE_META).map(([name, meta]) => [meta.slug, {name, ...meta}]));
 const GENERIC_CAFE_IMAGE = 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=80';
+
+function appBasePath(){
+  const path = window.location.pathname;
+  const marker = path.indexOf('/places/');
+  if(marker >= 0) return path.slice(0, marker + 1);
+  return path.endsWith('/') ? path : path.slice(0, path.lastIndexOf('/') + 1);
+}
 
 function placeFromPath(){
   const match = window.location.pathname.match(/\/places\/([^/]+)/i);
@@ -704,7 +724,7 @@ function renderPlaceDirectory(){
   const placeGrid = document.getElementById('placeGrid');
   placeGrid.innerHTML = Object.entries(PLACE_META).map(([name, meta]) => {
     const count = CAFES.filter(c => c.a === name).length;
-    return `<a class="place-card" href="/places/${meta.slug}" data-place-link>
+    return `<a class="place-card" href="${appBasePath()}places/${meta.slug}" data-place-link>
       <span class="place-kicker">Dhaka district</span>
       <strong>${escapeHtml(name)}</strong>
       <small>${count} café${count === 1 ? '' : 's'} · Explore →</small>
@@ -715,6 +735,7 @@ function renderPlaceDirectory(){
 function applyPlaceRoute(){
   currentPlace = placeFromPath();
   document.body.classList.toggle('place-page', Boolean(currentPlace));
+  document.getElementById('backToPlaces').href = appBasePath();
   const route = document.getElementById('placeRoute');
   const title = document.getElementById('placeRouteTitle');
   const description = document.getElementById('placeRouteDescription');
@@ -985,6 +1006,15 @@ document.addEventListener('click', event => {
   applyPlaceRoute();
   loadPlaces(currentPlace.name);
   window.scrollTo({top:0, behavior:'smooth'});
+});
+document.getElementById('backToPlaces').addEventListener('click', event => {
+  event.preventDefault();
+  const cameFromThisApp = document.referrer.startsWith(window.location.origin) && window.history.length > 1;
+  if(cameFromThisApp){
+    window.history.back();
+  }else{
+    window.location.assign(appBasePath());
+  }
 });
 window.addEventListener('popstate', () => {
   applyPlaceRoute();
